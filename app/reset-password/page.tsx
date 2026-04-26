@@ -18,11 +18,50 @@ export default function ResetPassword() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+  const [checking, setChecking] = useState(true);
 
   useEffect(() => {
     const check = async () => {
-      const { data } = await supabase.auth.getSession();
-      setValid(!!data.session);
+      try {
+        // First, try to get tokens from URL hash (Supabase recovery flow)
+        if (typeof window !== "undefined") {
+          const hash = window.location.hash.substring(1);
+          const hashParams = new URLSearchParams(hash);
+          const accessToken = hashParams.get("access_token");
+          const refreshToken = hashParams.get("refresh_token");
+          const type = hashParams.get("type");
+
+          // If we have tokens and it's a recovery type, set the session
+          if (accessToken && type === "recovery") {
+            const { data, error } = await supabase.auth.setSession({
+              access_token: accessToken,
+              refresh_token: refreshToken || "",
+            });
+
+            if (error) {
+              console.error("Error setting session:", error);
+              setValid(false);
+            } else if (data.session) {
+              setValid(true);
+              // Clear the hash from URL for security
+              window.history.replaceState(null, "", window.location.pathname);
+            } else {
+              setValid(false);
+            }
+            setChecking(false);
+            return;
+          }
+        }
+
+        // If no tokens in hash, check for existing session
+        const { data } = await supabase.auth.getSession();
+        setValid(!!data.session);
+      } catch (err) {
+        console.error("Error checking session:", err);
+        setValid(false);
+      } finally {
+        setChecking(false);
+      }
     };
 
     check();
@@ -60,6 +99,27 @@ export default function ResetPassword() {
       }, 2000);
     }
   };
+
+  if (checking) {
+    return (
+      <main className="min-h-screen bg-black flex items-center justify-center px-6">
+        <div className="w-full max-w-md">
+          <div className="rounded-2xl border border-white/10 bg-white/[0.02] backdrop-blur-sm p-8 text-center">
+            <div className="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center" style={{ background: brandGradient }}>
+              <svg className="animate-spin w-8 h-8 text-black" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+            </div>
+            <h1 className="text-2xl font-extrabold text-white mb-2">Verifying...</h1>
+            <p className="text-slate-400 text-sm">
+              Please wait while we verify your reset link.
+            </p>
+          </div>
+        </div>
+      </main>
+    );
+  }
 
   if (!valid) {
     return (
