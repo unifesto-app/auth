@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 const brandGradient = "linear-gradient(135deg, #3491ff, #0062ff)";
 const gradientText = {
@@ -11,14 +12,29 @@ const gradientText = {
 } as React.CSSProperties;
 
 export default function Home() {
+  const router = useRouter();
+
   useEffect(() => {
-    // Redirect to main site after 2 seconds
+    // Check if this is a password recovery flow from URL hash
+    if (typeof window !== "undefined") {
+      const hash = window.location.hash.substring(1); // Remove the # symbol
+      const hashParams = new URLSearchParams(hash);
+      const type = hashParams.get("type");
+      
+      if (type === "recovery") {
+        // Redirect to reset-password page for password recovery
+        router.push("/reset-password");
+        return;
+      }
+    }
+
+    // Otherwise, redirect to main site after 2 seconds
     const timer = setTimeout(() => {
       window.location.href = "https://www.unifesto.app";
     }, 2000);
 
     return () => clearTimeout(timer);
-  }, []);
+  }, [router]);
 
   return (
     <main className="min-h-screen bg-black flex items-center justify-center px-6">
@@ -42,7 +58,7 @@ export default function Home() {
 
           {/* Redirect Notice */}
           <p className="text-sm text-slate-500 mb-6">
-            Redirecting to main site...
+            Redirecting...
           </p>
 
           {/* Manual Navigation */}

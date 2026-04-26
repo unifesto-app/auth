@@ -39,8 +39,15 @@ function CallbackContent() {
 
   useEffect(() => {
     const handleCallback = async () => {
-      // Check if this is a password recovery flow
-      const type = searchParams.get("type");
+      // Check for type in query params
+      let type = searchParams.get("type");
+      
+      // If not in query params, check URL hash (Supabase uses hash fragments)
+      if (!type && typeof window !== "undefined") {
+        const hash = window.location.hash.substring(1); // Remove the # symbol
+        const hashParams = new URLSearchParams(hash);
+        type = hashParams.get("type");
+      }
       
       if (type === "recovery") {
         // For password recovery, redirect to reset-password page
