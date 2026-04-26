@@ -50,8 +50,12 @@ function CallbackContent() {
       }
       
       if (type === "recovery") {
-        // For password recovery, redirect to reset-password page
-        router.push("/reset-password");
+        // For password recovery, redirect to reset-password page WITH hash
+        if (typeof window !== "undefined" && window.location.hash) {
+          router.push(`/reset-password${window.location.hash}`);
+        } else {
+          router.push("/reset-password");
+        }
         return;
       }
 

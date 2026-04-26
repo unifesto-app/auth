@@ -22,8 +22,8 @@ export default function Home() {
       const type = hashParams.get("type");
       
       if (type === "recovery") {
-        // Redirect to reset-password page for password recovery
-        router.push("/reset-password");
+        // Redirect to reset-password page WITH the hash parameters
+        router.push(`/reset-password${window.location.hash}`);
         return;
       }
     }
