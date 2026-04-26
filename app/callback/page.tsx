@@ -1,25 +1,12 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 
 const brandGradient = "linear-gradient(135deg, #3491ff, #0062ff)";
 
-export default function CallbackPage() {
-  useEffect(() => {
-    const run = async () => {
-      const { data } = await supabase.auth.getSession();
-
-      if (data.session) {
-        window.location.href = "https://www.unifesto.app";
-      } else {
-        window.location.href = "https://www.unifesto.app";
-      }
-    };
-
-    run();
-  }, []);
-
+function LoadingScreen() {
   return (
     <main className="min-h-screen bg-black flex items-center justify-center px-6">
       <div className="w-full max-w-md text-center">
@@ -43,5 +30,44 @@ export default function CallbackPage() {
         </div>
       </div>
     </main>
+  );
+}
+
+function CallbackContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const handleCallback = async () => {
+      // Check if this is a password recovery flow
+      const type = searchParams.get("type");
+      
+      if (type === "recovery") {
+        // For password recovery, redirect to reset-password page
+        router.push("/reset-password");
+        return;
+      }
+
+      // For regular auth (login/signup), check session and redirect to main site
+      const { data } = await supabase.auth.getSession();
+
+      if (data.session) {
+        window.location.href = "https://www.unifesto.app";
+      } else {
+        window.location.href = "https://www.unifesto.app/auth";
+      }
+    };
+
+    handleCallback();
+  }, [router, searchParams]);
+
+  return <LoadingScreen />;
+}
+
+export default function CallbackPage() {
+  return (
+    <Suspense fallback={<LoadingScreen />}>
+      <CallbackContent />
+    </Suspense>
   );
 }
