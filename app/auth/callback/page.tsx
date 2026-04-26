@@ -6,24 +6,29 @@ const brandGradient = "linear-gradient(135deg, #3491ff, #0062ff)";
 
 export default function AuthCallbackPage() {
   useEffect(() => {
-    // This page is used for mobile OAuth callbacks
-    // Try to close the WebBrowser window
-    if (typeof window !== "undefined") {
-      // Signal to the WebBrowser that auth is complete
-      // The WebBrowser should automatically close when it detects this URL
-      
-      // For web browsers (not WebBrowser), redirect to main site
-      const timer = setTimeout(() => {
-        if (window.opener) {
-          // Opened in popup, close it
-          window.close();
-        } else {
-          // Regular browser, redirect
-          window.location.href = "https://www.unifesto.app";
-        }
-      }, 1000);
+    if (typeof window === "undefined") return;
 
-      return () => clearTimeout(timer);
+    // Check if this is a mobile OAuth callback
+    const hash = window.location.hash.substring(1);
+    const hashParams = new URLSearchParams(hash);
+    const accessToken = hashParams.get('access_token');
+    
+    // If we have an access token, this is an OAuth callback
+    if (accessToken) {
+      // Try to redirect to the mobile app using custom scheme
+      const mobileUrl = `unifesto://auth/callback${window.location.hash}`;
+      
+      // Attempt to open the mobile app
+      window.location.href = mobileUrl;
+      
+      // If the mobile app doesn't open after 2 seconds, show instructions
+      setTimeout(() => {
+        // User is probably on web, not mobile
+        // The page will show the success message
+      }, 2000);
+    } else {
+      // No token, redirect to main site
+      window.location.href = "https://www.unifesto.app";
     }
   }, []);
 
@@ -44,14 +49,12 @@ export default function AuthCallbackPage() {
           </h1>
           
           <p className="text-slate-400 text-sm mb-4">
-            Returning to app...
+            Opening Unifesto app...
           </p>
 
-          <div className="flex items-center justify-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-blue-500 animate-bounce" style={{ animationDelay: '0ms' }}></div>
-            <div className="w-2 h-2 rounded-full bg-blue-500 animate-bounce" style={{ animationDelay: '150ms' }}></div>
-            <div className="w-2 h-2 rounded-full bg-blue-500 animate-bounce" style={{ animationDelay: '300ms' }}></div>
-          </div>
+          <p className="text-xs text-slate-500 mt-6">
+            If the app doesn't open automatically, please return to the app manually.
+          </p>
         </div>
       </div>
     </main>
