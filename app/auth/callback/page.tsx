@@ -55,7 +55,6 @@ export default function AuthCallbackPage() {
           // Clear the stored origin
           sessionStorage.removeItem('auth_redirect_origin');
           
-          console.log('🔄 Redirecting back to origin:', redirectUrl);
         } else {
           console.warn('⚠️ Redirect origin not in allowed domains:', hostname);
         }
@@ -65,7 +64,6 @@ export default function AuthCallbackPage() {
     } else if (accessToken || code) {
       // No redirect origin specified, try mobile app first
       const mobileUrl = `unifesto://auth/callback${window.location.hash}${window.location.search}`;
-      console.log('📱 Attempting mobile redirect:', mobileUrl);
       window.location.href = mobileUrl;
       
       // If mobile app doesn't open, redirect to main site after 2 seconds
@@ -79,8 +77,6 @@ export default function AuthCallbackPage() {
       return;
     }
     
-    // Perform the redirect
-    console.log('✅ Final redirect:', redirectUrl);
     window.location.href = redirectUrl;
   }, []);
 
