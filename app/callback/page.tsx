@@ -59,13 +59,36 @@ function CallbackContent() {
         return;
       }
 
-      // For regular auth (login/signup), check session and redirect to main site
+      // For regular auth (login/signup), check session
       const { data } = await supabase.auth.getSession();
 
+      // Check if this is a mobile app request
+      // Mobile apps will have opened this in an in-app browser
+      const isMobileApp = typeof window !== "undefined" && (
+        window.navigator.userAgent.includes('Expo') ||
+        window.navigator.userAgent.includes('ReactNative') ||
+        // Check if opened from mobile app deep link
+        document.referrer.includes('unifesto://') ||
+        // Check if there's a mobile-specific parameter
+        searchParams.get('platform') === 'mobile'
+      );
+
       if (data.session) {
-        window.location.href = "https://www.unifesto.app";
+        if (isMobileApp) {
+          // Redirect to mobile app with the full hash (contains tokens)
+          const hash = window.location.hash;
+          window.location.href = `unifesto://${hash}`;
+        } else {
+          // Redirect to web app
+          window.location.href = "https://www.unifesto.app";
+        }
       } else {
-        window.location.href = "https://www.unifesto.app/auth";
+        // No session - redirect to auth page
+        if (isMobileApp) {
+          window.location.href = "unifesto://";
+        } else {
+          window.location.href = "https://www.unifesto.app/auth";
+        }
       }
     };
 
